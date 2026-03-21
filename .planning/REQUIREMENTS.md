@@ -1,7 +1,7 @@
 # Requirements: ShowUp
 
 **Defined:** 2026-03-21
-**Core Value:** Real-world accountability — you only see each other after you both physically show up. No catfishing, no ghosting.
+**Core Value:** Real-world accountability -- you only see each other after you both physically show up. No catfishing, no ghosting.
 
 ## v1 Requirements
 
@@ -37,7 +37,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Payment
 
-- [ ] **PAY-01**: Man can pay ₹99 via Razorpay to express interest in a match
+- [ ] **PAY-01**: Man can pay Rs 99 via Razorpay to express interest in a match
 - [ ] **PAY-02**: Payment is processed securely via Razorpay Standard Checkout (UPI-first)
 - [ ] **PAY-03**: Razorpay webhook confirms payment server-side (HMAC-SHA256 signature verification)
 - [ ] **PAY-04**: Failed/declined payments do not lock the match
@@ -70,7 +70,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Landing
 
 - [ ] **LAND-01**: Landing page with bold tagline and single "Get Started" CTA
-- [ ] **LAND-02**: Landing page is minimal — no feature lists, pure hook
+- [ ] **LAND-02**: Landing page is minimal -- no feature lists, pure hook
 
 ## v2 Requirements
 
@@ -110,7 +110,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | Feature | Reason |
 |---------|--------|
 | Swiping / browsing profiles | Contradicts hidden-profile USP, causes the exact fatigue ShowUp cures |
-| Photo visibility before meetup | Destroys core value proposition — no catfishing prevention |
+| Photo visibility before meetup | Destroys core value proposition -- no catfishing prevention |
 | Free messaging for everyone | Removes commitment signal, leads to mass low-effort messages |
 | User-chosen venues | Decision friction, unsafe locations, anxiety |
 | Real-time video chat | Reveals identity before GPS verification, high WebRTC complexity |
@@ -127,13 +127,53 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| *(populated by roadmapper)* | | |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| ONBR-01 | Phase 1 | Pending |
+| ONBR-02 | Phase 1 | Pending |
+| ONBR-03 | Phase 1 | Pending |
+| ONBR-04 | Phase 1 | Pending |
+| ONBR-05 | Phase 1 | Pending |
+| ONBR-06 | Phase 1 | Pending |
+| LAND-01 | Phase 1 | Pending |
+| LAND-02 | Phase 1 | Pending |
+| MTCH-01 | Phase 2 | Pending |
+| MTCH-02 | Phase 2 | Pending |
+| MTCH-03 | Phase 2 | Pending |
+| MTCH-04 | Phase 2 | Pending |
+| MTCH-05 | Phase 2 | Pending |
+| MTCH-06 | Phase 2 | Pending |
+| MTCH-07 | Phase 2 | Pending |
+| MTCH-08 | Phase 2 | Pending |
+| MTCH-09 | Phase 2 | Pending |
+| PAY-01 | Phase 2 | Pending |
+| PAY-02 | Phase 2 | Pending |
+| PAY-03 | Phase 2 | Pending |
+| PAY-04 | Phase 2 | Pending |
+| PAY-05 | Phase 2 | Pending |
+| PAY-06 | Phase 2 | Pending |
+| CHAT-01 | Phase 3 | Pending |
+| CHAT-02 | Phase 3 | Pending |
+| CHAT-03 | Phase 3 | Pending |
+| CHAT-04 | Phase 3 | Pending |
+| MEET-01 | Phase 4 | Pending |
+| MEET-02 | Phase 4 | Pending |
+| MEET-03 | Phase 4 | Pending |
+| MEET-04 | Phase 4 | Pending |
+| VRFY-01 | Phase 5 | Pending |
+| VRFY-02 | Phase 5 | Pending |
+| VRFY-03 | Phase 5 | Pending |
+| VRFY-04 | Phase 5 | Pending |
+| VRFY-05 | Phase 5 | Pending |
+| VRFY-06 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 0
-- Unmapped: 30
+- v1 requirements: 41 total
+- Mapped to phases: 41
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 after initial definition*
+*Last updated: 2026-03-21 after roadmap creation*
