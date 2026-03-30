@@ -1,11 +1,40 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Smartphone } from 'lucide-react';
 import { Button } from '@/components/button';
+import { createClient } from '@/lib/supabase/client';
 
 export default function Login() {
   const router = useRouter();
+  const supabase = createClient();
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
+
+    if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
+      setError('Enter a valid 10-digit phone number starting with 6, 7, 8, or 9.');
+      return;
+    }
+
+    setIsLoading(true);
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      phone: `+91${phoneNumber}`,
+    });
+    setIsLoading(false);
+
+    if (otpError) {
+      setError(otpError.message);
+      return;
+    }
+
+    router.push(`/otp?phone=${phoneNumber}`);
+  };
 
   return (
     <div className="bg-background text-on-background font-body antialiased min-h-screen flex flex-col">
@@ -26,7 +55,7 @@ export default function Login() {
             </p>
           </header>
 
-          <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); router.push('/otp'); }}>
+          <form className="space-y-8" onSubmit={handleSubmit}>
             <div className="relative group">
               <label className="block text-[10px] font-label font-bold uppercase tracking-widest text-primary mb-2 transition-all duration-300 group-focus-within:translate-x-1">
                 Phone Number
@@ -34,18 +63,23 @@ export default function Login() {
               <div className="relative">
                 <input
                   className="w-full bg-surface-container-low border-b border-outline-variant/30 text-on-surface text-2xl font-body py-4 focus:outline-none focus:border-primary transition-colors placeholder:text-surface-container-highest"
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="9XXXXXXXXX"
                   type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 />
                 <div className="absolute right-0 bottom-4 text-on-surface-variant opacity-40">
                   <Smartphone className="w-6 h-6" />
                 </div>
               </div>
+              {error ? (
+                <p className="mt-3 text-sm text-red-500">{error}</p>
+              ) : null}
             </div>
 
             <div className="pt-4">
-              <Button type="submit" className="w-full py-5 text-base">
-                Send OTP
+              <Button type="submit" className="w-full py-5 text-base" disabled={isLoading}>
+                {isLoading ? 'Sending...' : 'Send OTP'}
               </Button>
             </div>
           </form>
