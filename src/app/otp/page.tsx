@@ -1,12 +1,21 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/button';
 import { createClient } from '@/lib/supabase/client';
+import { formatIndiaE164 } from '@/lib/phone';
 
 export default function OTP() {
+  return (
+    <Suspense fallback={null}>
+      <OTPContent />
+    </Suspense>
+  );
+}
+
+function OTPContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -16,10 +25,6 @@ export default function OTP() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(60);
-
-  useEffect(() => {
-    setCountdown(60);
-  }, [phone]);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -89,8 +94,9 @@ export default function OTP() {
     }
 
     setIsLoading(true);
+    const formattedPhone = formatIndiaE164(phone);
     const { error: resendError } = await supabase.auth.signInWithOtp({
-      phone: `+91${phone}`,
+      phone: formattedPhone,
     });
     setIsLoading(false);
 
@@ -123,7 +129,7 @@ export default function OTP() {
               Verify Identity
             </h1>
             <p className="text-on-surface-variant font-body text-base max-w-[280px] mx-auto leading-relaxed opacity-80">
-              We sent a 4-digit code to your registered mobile number.
+              We sent a 6-digit code to your registered mobile number.
             </p>
           </div>
 

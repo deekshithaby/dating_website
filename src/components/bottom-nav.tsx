@@ -14,7 +14,16 @@ export const BottomNav = () => {
     { icon: User, label: 'Profile', path: '/profile' },
   ];
 
-  const suppressedRoutes = ['/onboarding', '/otp', '/photo-upload', '/finding-matches', '/reveal'];
+  const suppressedRoutes = [
+    '/login',
+    '/onboarding',
+    '/otp',
+    '/photo-upload',
+    '/finding-matches',
+    '/reveal',
+    '/privacy',
+    '/terms',
+  ];
   if (suppressedRoutes.includes(pathname)) return null;
 
   return (

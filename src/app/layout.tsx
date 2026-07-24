@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Epilogue, Manrope } from "next/font/google";
+import Script from "next/script";
 import { Shell } from "@/components/shell";
 import "./globals.css";
 
@@ -29,6 +30,15 @@ export default function RootLayout({
     <html lang="en" className={`${epilogue.variable} ${manrope.variable}`}>
       <body>
         <Shell>{children}</Shell>
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function () {});
+              });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

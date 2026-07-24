@@ -9,7 +9,7 @@ export default function FindingMatches() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.push('/match-found');
+      router.replace('/profile');
     }, 4000);
     return () => clearTimeout(timer);
   }, [router]);

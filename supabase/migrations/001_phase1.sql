@@ -7,6 +7,7 @@ create table if not exists public.profiles (
   bio text check (char_length(bio) <= 300),
   photo_key text,
   photo_uploaded boolean default false,
+  terms_accepted boolean default false,
   onboarding_complete boolean default false,
   created_at timestamptz default now()
 );

@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Button } from '@/components/button';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -17,11 +18,14 @@ export default function Onboarding() {
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [bio, setBio] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [photoUploaded, setPhotoUploaded] = useState(false);
   const [quizStep, setQuizStep] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [saveError, setSaveError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(true);
 
   const options = [
     { id: 'Introvert', label: 'Introvert', sub: 'Values Deep Connection' },
@@ -82,6 +86,48 @@ export default function Onboarding() {
   }, [step]);
 
   useEffect(() => {
+    const hydrate = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, age, gender, bio, terms_accepted, photo_uploaded, onboarding_complete')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile?.onboarding_complete) {
+        router.push('/profile');
+        return;
+      }
+
+      if (profile?.display_name) setDisplayName(profile.display_name);
+      if (typeof profile?.age === 'number') setAge(String(profile.age));
+      if (profile?.gender === 'male' || profile?.gender === 'female') {
+        setGender(profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1));
+      }
+      if (profile?.bio) setBio(profile.bio);
+      if (profile?.terms_accepted) setTermsAccepted(true);
+      if (profile?.photo_uploaded) setPhotoUploaded(true);
+
+      setIsHydrating(false);
+    };
+
+    void hydrate();
+  }, [router, supabase]);
+
+  useEffect(() => {
+    if (!isSaved) return;
+    router.replace('/finding-matches');
+  }, [isSaved, router]);
+
+  useEffect(() => {
     const saveOnFinalStep = async () => {
       if (step !== 4 || isSaved) return;
 
@@ -96,6 +142,14 @@ export default function Onboarding() {
       if (userError || !user) {
         setIsSaving(false);
         setSaveError(userError?.message ?? 'Could not fetch authenticated user.');
+        router.push('/login');
+        return;
+      }
+
+      if (!termsAccepted || !photoUploaded) {
+        setIsSaving(false);
+        setSaveError('Please complete photo upload and accept terms before finishing.');
+        setStep(2);
         return;
       }
 
@@ -106,6 +160,7 @@ export default function Onboarding() {
         age: Number(age),
         gender: gender.toLowerCase(),
         bio: bio.trim(),
+        terms_accepted: termsAccepted,
         onboarding_complete: true,
       });
 
@@ -119,6 +174,8 @@ export default function Onboarding() {
       const { error: quizError } = await supabase.from('quiz_responses').upsert({
         user_id: user.id,
         responses: { personality: selected, ...quizAnswers },
+      }, {
+        onConflict: 'user_id',
       });
 
       if (quizError) {
@@ -133,7 +190,7 @@ export default function Onboarding() {
     };
 
     void saveOnFinalStep();
-  }, [age, bio, displayName, gender, isSaved, quizAnswers, selected, step, supabase]);
+  }, [age, bio, displayName, gender, isSaved, photoUploaded, quizAnswers, router, selected, step, supabase, termsAccepted]);
 
   const canGoNext = () => {
     if (step === 1) return Boolean(selected);
@@ -147,7 +204,9 @@ export default function Onboarding() {
         parsedAge >= 18 &&
         parsedAge <= 30 &&
         (gender === 'Male' || gender === 'Female') &&
-        bio.trim().length <= 300
+        bio.trim().length <= 300 &&
+        termsAccepted &&
+        photoUploaded
       );
     }
     if (step === 3) return Boolean(quizAnswers[currentQuiz.id]);
@@ -195,6 +254,9 @@ export default function Onboarding() {
       </header>
 
       <main className="w-full max-w-xl px-6 pt-24 pb-32 flex-grow flex flex-col justify-center">
+        {isHydrating ? (
+          <div className="text-center text-on-surface-variant text-sm">Loading your onboarding...</div>
+        ) : null}
         <div className="mb-12">
           <div className="flex justify-between items-end mb-3">
             <span className="text-[10px] uppercase font-bold font-label tracking-widest text-primary">Phase {String(step).padStart(2, '0')} / 04</span>
@@ -324,6 +386,37 @@ export default function Onboarding() {
                   {bio.length} / 300
                 </p>
               </div>
+
+              <div className="bg-surface-container-low p-4 border border-outline-variant/30">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-1 accent-primary"
+                  />
+                  <span className="text-sm text-on-surface-variant leading-relaxed">
+                    I agree to the{' '}
+                    <Link href="/privacy" className="text-primary underline underline-offset-2">
+                      Privacy Policy
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/terms" className="text-primary underline underline-offset-2">
+                      Terms of Service
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </div>
+
+              <div className="bg-surface-container-low p-4 border border-outline-variant/30 flex items-center justify-between gap-4">
+                <p className="text-sm text-on-surface-variant">
+                  Verification photo status: {photoUploaded ? 'Uploaded' : 'Pending'}
+                </p>
+                <Button onClick={() => router.push('/photo-upload')} type="button">
+                  Upload Photo
+                </Button>
+              </div>
             </div>
           </section>
         ) : null}
@@ -404,13 +497,15 @@ export default function Onboarding() {
             {step === 3 && quizStep === quizQuestions.length - 1 ? 'Finish' : 'Next'}
           </Button>
         ) : (
-          <Button
-            onClick={() => router.push('/profile')}
-            className="w-full h-14"
-            disabled={!isSaved || isSaving}
-          >
-            Continue
-          </Button>
+          <div className="w-full min-h-14 flex items-center justify-center text-sm text-on-surface-variant px-4 text-center">
+            {saveError
+              ? null
+              : isSaved
+                ? 'Taking you inside…'
+                : isSaving
+                  ? 'Saving profile…'
+                  : 'Finalizing…'}
+          </div>
         )}
         <p className="text-center text-[10px] uppercase font-bold text-gray-600 tracking-tighter">
           Curating your experience...

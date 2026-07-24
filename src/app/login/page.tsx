@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Smartphone } from 'lucide-react';
 import { Button } from '@/components/button';
 import { createClient } from '@/lib/supabase/client';
+import { formatIndiaE164 } from '@/lib/phone';
 
 export default function Login() {
   const router = useRouter();
@@ -23,8 +25,9 @@ export default function Login() {
     }
 
     setIsLoading(true);
+    const formattedPhone = formatIndiaE164(phoneNumber);
     const { error: otpError } = await supabase.auth.signInWithOtp({
-      phone: `+91${phoneNumber}`,
+      phone: formattedPhone,
     });
     setIsLoading(false);
 
@@ -86,7 +89,15 @@ export default function Login() {
 
           <footer className="mt-12">
             <p className="text-[10px] font-label font-semibold text-on-surface-variant/50 uppercase tracking-[0.2em] leading-loose">
-              By continuing, you agree to our <a href="#" className="text-on-surface underline decoration-outline-variant/50 hover:text-primary transition-colors">Privacy Policy</a> and <a href="#" className="text-on-surface underline decoration-outline-variant/50 hover:text-primary transition-colors">Terms of Service</a>.
+              By continuing, you agree to our{' '}
+              <Link href="/privacy" className="text-on-surface underline decoration-outline-variant/50 hover:text-primary transition-colors">
+                Privacy Policy
+              </Link>{' '}
+              and{' '}
+              <Link href="/terms" className="text-on-surface underline decoration-outline-variant/50 hover:text-primary transition-colors">
+                Terms of Service
+              </Link>
+              .
             </p>
           </footer>
         </div>

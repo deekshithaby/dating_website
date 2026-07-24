@@ -1,11 +1,84 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Camera, CheckCircle2, Ban } from 'lucide-react';
 import { Button } from '@/components/button';
+import { createClient } from '@/lib/supabase/client';
 
 export default function PhotoUpload() {
   const router = useRouter();
+  const supabase = createClient();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleUpload = async () => {
+    setError('');
+    if (!file) {
+      setError('Please select a photo to continue.');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload a valid image file.');
+      return;
+    }
+
+    setIsUploading(true);
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setIsUploading(false);
+      setError(userError?.message ?? 'Please login again.');
+      return;
+    }
+
+    const signRes = await fetch('/api/uploads/photo-sign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentType: file.type }),
+    });
+
+    const signJson = await signRes.json();
+    if (!signRes.ok) {
+      setIsUploading(false);
+      setError(signJson.error ?? 'Could not prepare upload.');
+      return;
+    }
+
+    const uploadRes = await fetch(signJson.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+
+    if (!uploadRes.ok) {
+      setIsUploading(false);
+      setError('Upload failed. Please try again.');
+      return;
+    }
+
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: user.id,
+      phone: user.phone,
+      photo_key: signJson.photoKey,
+      photo_uploaded: true,
+    });
+
+    if (profileError) {
+      setIsUploading(false);
+      setError(profileError.message);
+      return;
+    }
+
+    setIsUploading(false);
+    router.push('/onboarding');
+  };
 
   return (
     <div className="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary">
@@ -30,14 +103,26 @@ export default function PhotoUpload() {
         </header>
 
         <section className="flex-grow flex flex-col">
-          <div className="relative w-full aspect-[4/5] bg-surface-container-low rounded-lg flex items-center justify-center p-4 group cursor-pointer transition-all duration-300">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="relative w-full aspect-[4/5] bg-surface-container-low rounded-lg flex items-center justify-center p-4 group cursor-pointer transition-all duration-300"
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
             <div className="absolute inset-4 rounded-lg dashed-border opacity-40 group-hover:opacity-100 transition-opacity" />
             <div className="flex flex-col items-center text-center px-8 z-10">
               <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-300">
                 <Camera className="w-8 h-8" />
               </div>
               <h2 className="font-headline text-lg font-bold mb-2">Upload a clear photo of your face</h2>
-              <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant opacity-60">Tap to browse or drag & drop</p>
+              <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant opacity-60">
+                {file ? `Selected: ${file.name}` : 'Tap to browse or drag & drop'}
+              </p>
             </div>
             <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-primary/5 to-transparent opacity-30 rounded-lg" />
           </div>
@@ -73,11 +158,13 @@ export default function PhotoUpload() {
 
         <footer className="mt-12 sticky bottom-0 bg-surface/80 backdrop-blur-md pt-4 pb-4">
           <Button
-            onClick={() => router.push('/finding-matches')}
+            onClick={handleUpload}
+            disabled={isUploading}
             className="w-full py-5"
           >
-            Continue
+            {isUploading ? 'Uploading...' : 'Continue'}
           </Button>
+          {error ? <p className="text-center mt-3 text-sm text-red-500">{error}</p> : null}
           <p className="text-center mt-4 text-[10px] text-on-surface-variant opacity-40 uppercase tracking-tighter">
             Your data is encrypted and used for verification only.
           </p>
